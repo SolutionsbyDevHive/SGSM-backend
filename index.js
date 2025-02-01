@@ -1,39 +1,80 @@
-// require("dotenv").config();
-// const axios = require("axios");
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const twilio = require("twilio");
 
-// const sendSMS = async (amount) => {
-//   try {
-//     // Fast2SMS API URL
-//     const apiUrl = "https://www.fast2sms.com/dev/api/"
+const app = express();
+const PORT = process.env.PORT || 5000;
 
-//     // Replace with your actual Fast2SMS API key
-//     const apiKey = process.env.FAST2SMS_API_KEY;
-    
-//     const phoneNumber = "8879693624";  // Replace with the actual phone number
+// Twilio Credentials
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioNumber = process.env.TWILIO_PHONE_NUMBER; // Add your Twilio phone number in .env
 
-//     // Construct the message with the dynamic amount
-//     const message = `We have successfully received a donation of ₹${amount}. Thank You`;
+const client = twilio(accountSid, authToken);
 
-//     // Fast2SMS API request configuration
-//     const response = await axios.post(apiUrl + "send", null, {
-//       params: {
-//         authorization: apiKey,
-//         message: message,
-//         language: "english",
-//         route: "p",
-//         numbers: phoneNumber,
-//       },
-//     });
+app.use(cors());
+app.use(express.json()); // Parse JSON body
 
-//     if (response.data) {
-//       console.log("SMS sent successfully:", response.data);
-//     } else {
-//       console.log("Failed to send SMS:", response);
-//     }
-//   } catch (error) {
-//     console.error("Error sending SMS:", error.message);
-//   }
-// };
+// SMS sending endpoint
+app.post("/send-sms", async (req, res) => {
+  try {
+    const { to, message } = req.body;
 
-// // Example usage: Send SMS with amount of ₹500
-// sendSMS(500);
+    if (!to || !message) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const response = await client.messages.create({
+      to,
+      from: twilioNumber,
+      body: message,
+    });
+
+    res.status(200).json({ success: true, sid: response.sid });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", details: err.message });
+  }
+});
+
+// Define a POST API endpoint to trigger the message
+app.post("/send-message", (req, res) => {
+  // Destructure the required parameters from the request body
+  const { to, contentSid, contentVariables, name } = req.body;
+
+  // Validate input
+  if (!to || !contentSid || !contentVariables || !name) {
+    return res
+      .status(400)
+      .send("Missing required fields (to, contentSid, contentVariables, name).");
+  }
+
+  // Craft a personalized message using the provided name
+  const personalizedMessage = `Hello ${name}. Thank you for donating at SGSM.`;
+
+  // Send the message using Twilio API
+  client.messages
+    .create({
+      from: "whatsapp:+14155238886", // Twilio sandbox WhatsApp number
+      to: `whatsapp:${to}`,           // Recipient's WhatsApp number (from JSON body)
+      contentSid: contentSid,         // Content SID (from JSON body)
+      body: personalizedMessage,      // Personalized message with the dynamic name
+    })
+    .then((message) => {
+      res.status(200).send({ message: "Message sent successfully!", sid: message.sid });
+    })
+    .catch((error) => {
+      res.status(500).send({ error: `Error sending message: ${error.message}` });
+    });
+});
+
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
