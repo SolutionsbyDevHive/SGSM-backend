@@ -48,7 +48,9 @@ app.post("/send-message", (req, res) => {
   if (!to || !contentSid || !contentVariables || !name) {
     return res
       .status(400)
-      .send("Missing required fields (to, contentSid, contentVariables, name).");
+      .send(
+        "Missing required fields (to, contentSid, contentVariables, name)."
+      );
   }
 
   // Craft a personalized message using the provided name
@@ -58,23 +60,29 @@ app.post("/send-message", (req, res) => {
   client.messages
     .create({
       from: "whatsapp:+14155238886", // Twilio sandbox WhatsApp number
-      to: `whatsapp:${to}`,           // Recipient's WhatsApp number (from JSON body)
-      contentSid: contentSid,         // Content SID (from JSON body)
-      body: personalizedMessage,      // Personalized message with the dynamic name
+      to: `whatsapp:${to}`, // Recipient's WhatsApp number (from JSON body)
+      contentSid: contentSid, // Content SID (from JSON body)
+      body: personalizedMessage, // Personalized message with the dynamic name
     })
     .then((message) => {
-      res.status(200).send({ message: "Message sent successfully!", sid: message.sid });
+      res
+        .status(200)
+        .send({ message: "Message sent successfully!", sid: message.sid });
     })
     .catch((error) => {
-      res.status(500).send({ error: `Error sending message: ${error.message}` });
+      res
+        .status(500)
+        .send({ error: `Error sending message: ${error.message}` });
     });
 });
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server running on http://localhost:${PORT}`);
+// });
+
+module.exports = app;
