@@ -1,68 +1,78 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { Resend } = require("resend");
+const twilio = require("twilio");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Twilio Credentials
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioNumber = process.env.TWILIO_PHONE_NUMBER; // Add your Twilio phone number in .env
+
+const client = twilio(accountSid, authToken);
 
 app.use(cors());
 app.use(express.json()); // Parse JSON body
 
-// Email sending endpoint
-app.post("/send-email", async (req, res) => {
+// SMS sending endpoint
+app.post("/send-sms", async (req, res) => {
   try {
-    const { to, subject, message } = req.body;
+    const { to, message } = req.body;
 
-    if (!to || !subject || !message) {
+    if (!to || !message) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const { data, error } = await resend.emails.send({
-      from: "Saurashtra Gurjar Sutar Mandal <delivered@resend.dev>",
-      to: [to],
-      subject: subject,
-      html: `
-        <table width="100%" cellspacing="0" cellpadding="0" border="0" style="text-align: center; font-family: Arial, sans-serif;">
-          <tr>
-            <td style="padding: 20px;">
-              <img src="https://firebasestorage.googleapis.com/v0/b/diosdamroo-b97a0.appspot.com/o/logo.png?alt=media&token=da43ea9d-ed3c-400a-b3f3-938e8933a142" 
-                   width="400" height="280" 
-                   alt="Logo" 
-                   style="display: block; margin: 0 auto;">
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <h2 style="font-family: Arial, Helvetica, sans-serif;margin: 0;">Thank You For Donating!</h2>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 10px;">
-               <p style="text-align: center; font-size: larger; margin: 0;">This email is to notify that we have successfully received your donation<br>and have attached the receipt to this email</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 10px;">
-              <h4>- SHRI GURJAR SUTAR MANDAL</h4>
-            </td>
-          </tr>
-        </table>
-      `,
+    const response = await client.messages.create({
+      to,
+      from: twilioNumber,
+      body: message,
     });
 
-    if (error) {
-      return res.status(500).json({ error });
-    }
-
-    res.status(200).json({ success: true, data });
+    res.status(200).json({ success: true, sid: response.sid });
   } catch (err) {
     res
       .status(500)
       .json({ error: "Internal Server Error", details: err.message });
   }
 });
+
+// Define a POST API endpoint to trigger the message
+app.post("/send-message", (req, res) => {
+  // Destructure the required parameters from the request body
+  const { to, contentSid, contentVariables, name } = req.body;
+
+  // Validate input
+  if (!to || !contentSid || !contentVariables || !name) {
+    return res
+      .status(400)
+      .send("Missing required fields (to, contentSid, contentVariables, name).");
+  }
+
+  // Craft a personalized message using the provided name
+  const personalizedMessage = `Hello ${name}. Thank you for donating at SGSM.`;
+
+  // Send the message using Twilio API
+  client.messages
+    .create({
+      from: "whatsapp:+14155238886", // Twilio sandbox WhatsApp number
+      to: `whatsapp:${to}`,           // Recipient's WhatsApp number (from JSON body)
+      contentSid: contentSid,         // Content SID (from JSON body)
+      body: personalizedMessage,      // Personalized message with the dynamic name
+    })
+    .then((message) => {
+      res.status(200).send({ message: "Message sent successfully!", sid: message.sid });
+    })
+    .catch((error) => {
+      res.status(500).send({ error: `Error sending message: ${error.message}` });
+    });
+});
+
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
 
 // Start the server
 app.listen(PORT, () => {
