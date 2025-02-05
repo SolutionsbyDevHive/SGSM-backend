@@ -3,14 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Donation Receipt</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        table {
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        td {
+            padding: 10px;
+            text-align: center;
+        }
+        @media screen and (max-width: 600px) {
+            td {
+                padding: 15px;
+            }
+            img {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div style="display: flex; flex-direction: column; gap: 2rem; align-items: center;justify-content: center;">
-        <img src="https://firebasestorage.googleapis.com/v0/b/diosdamroo-b97a0.appspot.com/o/logo.png?alt=media&token=da43ea9d-ed3c-400a-b3f3-938e8933a142" height="280" width="400" alt="">
-        <h2 style="font-family: Arial, Helvetica, sans-serif;margin: 0;">Thank You For Donating!</h2>
-        <p style="text-align: center; font-size: larger; margin: 0;">This email is to notify that we have successfully received your donation<br>and have attached the receipt to this email</p>
-        <h4 style="font-family: Arial, Helvetica, sans-serif;">-SHRI GURJAR SUTAR MANDAL</h4>
-    </div>
+    <table cellspacing="0" cellpadding="0" border="0">
+        <tr>
+            <td>
+                <img src="https://firebasestorage.googleapis.com/v0/b/diosdamroo-b97a0.appspot.com/o/logo.png?alt=media&token=da43ea9d-ed3c-400a-b3f3-938e8933a142" alt="Logo">
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 24px; font-weight: bold;">
+                Thank You For Donating!
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 18px;">
+                This email is to notify that we have successfully received your donation<br>
+                and have attached the receipt to this email.
+            </td>
+        </tr>
+        <tr>
+            <td style="font-size: 16px; font-weight: bold;">
+                - SHRI GURJAR SUTAR MANDAL
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
