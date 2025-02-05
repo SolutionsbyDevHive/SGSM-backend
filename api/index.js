@@ -21,7 +21,7 @@ app.use(express.json()); // Parse JSON body
 app.post("/send-sms", async (req, res) => {
   try {
     const { to, name, amount } = req.body;
-    const personalizedMessage = `Hello ${name} Your donation of ₹${amount} has been successfully received. Thank You!`;
+    const personalizedMessage = `Thank You ${name}! Your donation of ₹${amount} has been successfully received. -SHRI SAURASHTRA GURJAR SUTAR GNATI MANDAL`;
 
     const response = await client.messages.create({
       to,
