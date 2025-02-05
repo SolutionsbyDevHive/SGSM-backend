@@ -69,36 +69,6 @@ app.get("/", (req, res) => {
 const sgMail = require("@sendgrid/mail");
 const bodyParser = require("body-parser");
 app.use(bodyParser.json());
-sgMail.setApiKey(process.env.SENDGRID_EMAIL_KEY);
-
-// Endpoint to send email
-app.post("/sendEmail", async (req, res) => {
-  const { toEmail } = req.body;
-
-  // Construct the email data
-  const msg = {
-    to: toEmail, // recipient email
-    from: {
-      name: "Saurashtra Gurjar Sutar",
-      email: "leadibonbubble@gmail.com",
-    }, // your verified sender email
-    subject: "Thank You!",
-    text: "Hello Worold",
-    html: "<strong>Hello World</strong>",
-
-    // templateId: "d-febcf90bc59b4c21855eb91523981230", // your dynamic template ID
-    // dynamic_template_data: dynamicData, // Pass the dynamic data to the template
-  };
-
-  try {
-    // Send the email
-    await sgMail.send(msg);
-    res.status(200).send("Email sent successfully");
-  } catch (error) {
-    console.error("Error sending email:", error);
-    res.status(500).send("Failed to send email");
-  }
-});
 
 // Email sending endpoint using Brevo
 app.post("/send-email", async (req, res) => {
@@ -180,7 +150,10 @@ app.post("/send-email", async (req, res) => {
     const response = await axios.post(
       "https://api.brevo.com/v3/smtp/email",
       {
-        sender: { name: "SGSM", email: "swayamzinzuwadia@gmail.com" }, // Replace with your sender email
+        sender: {
+          name: "Saurashtra Gurjar Sutar Mandal",
+          email: "swayamzinzuwadia@gmail.com",
+        }, // Replace with your sender email
         to: [{ email: to }],
         subject: "Donation Confirmation",
         htmlContent: emailTemplate, // Inserted HTML template
