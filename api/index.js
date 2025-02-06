@@ -6,7 +6,8 @@ const twilio = require("twilio");
 const axios = require("axios"); // Added for Brevo email API
 const app = express();
 const PORT = 5000;
-
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
 // Twilio Credentials
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
@@ -21,7 +22,7 @@ app.use(express.json()); // Parse JSON body
 app.post("/send-sms", async (req, res) => {
   try {
     const { to, name, amount } = req.body;
-    const personalizedMessage = `Thank You ${name}! Your donation of ₹${amount} has been successfully received. -SHRI SAURASHTRA GURJAR SUTAR GNATI MANDAL`;
+    const personalizedMessage = `Thank You ${name}! Your donation of Rs.${amount} has been successfully received. -SHRI SAURASHTRA GURJAR SUTAR GNATI MANDAL`;
 
     const response = await client.messages.create({
       to,
@@ -40,7 +41,7 @@ app.post("/send-sms", async (req, res) => {
 // Define a POST API endpoint to trigger the message
 app.post("/send-message", (req, res) => {
   const { to, name, amount } = req.body;
-  const personalizedMessage = `Hello ${name} Your donation of ₹${amount} has been successfully received. Thank You!`;
+  const personalizedMessage = `Hello ${name} Your donation of Rs.${amount} has been successfully received. Thank You!`;
 
   // Send the message using Twilio API
   client.messages
@@ -70,11 +71,67 @@ const sgMail = require("@sendgrid/mail");
 const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 
+function generateInvoice(invoiceData, filePath) {
+  const doc = new PDFDocument({ margin: 50 });
+  const stream = fs.createWriteStream(filePath);
+
+  doc.pipe(stream);
+
+  // Header
+  doc.fontSize(20).text("INVOICE", { align: "center" });
+  doc.moveDown();
+
+  // Sender & Recipient Details
+  doc.fontSize(12).text(`From: Saurashtra Gurjar Sutar Gnati Mandal`);
+  doc.text(
+    `Address:\n118, 1st Floor, B-wing, K.D.Height, Building No. 3,\n Near Kathiawad Chowk, Opp. Laxmi Narayan Temple,\n Rani Sati Marg, Malad (East),\n Mumbai- 400 097.`
+  );
+  doc.text(`Email: saurashtraGurjarSutarGnati@gmail.com`);
+  doc.moveDown();
+
+  doc.text(`To: ${invoiceData.name}`);
+  doc.text(`Email: ${invoiceData.email}`);
+  doc.moveDown();
+
+  // Table Header
+  doc.moveDown();
+  doc.fontSize(12).text("Particulars", 50, doc.y);
+  doc.text("Amount", 450, doc.y);
+  doc.moveDown();
+
+  let totalAmount = 0;
+  Object.entries(invoiceData.amounts).forEach(([key, value]) => {
+    const amount = Number(value) || 0; // Convert value to number
+    doc.text(key, 50, doc.y);
+    doc.text(`Rs. ${amount.toFixed(2)}`, 450, doc.y);
+    totalAmount += amount;
+    doc.moveDown();
+  });
+
+  // Total Amount Section
+  doc.moveDown();
+  doc.fontSize(14).text(`Total Amount: Rs. ${totalAmount.toFixed(2)}`, {
+    align: "right",
+  });
+
+  // Footer
+  doc.moveDown();
+  doc.fontSize(10).text("Thank you for your Donation!", { align: "center" });
+
+  // Finalize the PDF
+  doc.end();
+
+  // Wait for the stream to finish writing
+  return new Promise((resolve, reject) => {
+    stream.on("finish", resolve);
+    stream.on("error", reject);
+  });
+}
 // Email sending endpoint using Brevo
 app.post("/send-email", async (req, res) => {
   try {
-    const { to } = req.body;
-
+    const { to, donaterData } = req.body;
+    generateInvoice(donaterData, "invoice.pdf");
     if (!to) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -147,6 +204,22 @@ app.post("/send-email", async (req, res) => {
 
     `;
 
+    const pdfPath = "./invoice.pdf";
+
+    // Check if the file exists before proceeding
+    if (!fs.existsSync(pdfPath)) {
+      throw new Error("PDF file not found at " + pdfPath);
+    }
+
+    // Read the PDF file and convert it to Base64
+    const pdfBuffer = fs.readFileSync(pdfPath); // Read file
+    const pdfBase64 = pdfBuffer.toString("base64"); // Convert to Base64
+
+    // Ensure the Base64 string is properly created
+    if (!pdfBase64) {
+      throw new Error("Failed to encode PDF to Base64");
+    }
+
     const response = await axios.post(
       "https://api.brevo.com/v3/smtp/email",
       {
@@ -157,6 +230,12 @@ app.post("/send-email", async (req, res) => {
         to: [{ email: to }],
         subject: "Donation Confirmation",
         htmlContent: emailTemplate, // Inserted HTML template
+        attachment: [
+          {
+            name: "invoice.pdf", // File name
+            content: pdfBase64, // Base64 encoded content
+          },
+        ],
       },
       {
         headers: {

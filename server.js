@@ -1,76 +1,92 @@
-// require("dotenv").config();
-// const express = require("express");
-// const cors = require("cors");
-// const twilio = require("twilio");
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
 
-// const app = express();
-// const PORT = process.env.PORT || 5000;
+function generateInvoice(invoiceData, filePath) {
+  const doc = new PDFDocument({ margin: 50 });
 
-// // Twilio Credentials
-// const accountSid = process.env.TWILIO_ACCOUNT_SID;
-// const authToken = process.env.TWILIO_AUTH_TOKEN;
-// const twilioNumber = process.env.TWILIO_PHONE_NUMBER; // Add your Twilio phone number in .env
+  // Pipe the document to a file
+  const stream = fs.createWriteStream(filePath);
+  doc.pipe(stream);
 
-// const client = twilio(accountSid, authToken);
+  // Header
+  doc.fontSize(20).text("INVOICE", { align: "center" });
+  doc.moveDown();
 
-// app.use(cors());
-// app.use(express.json()); // Parse JSON body
+  // Invoice Details
+  doc.fontSize(12).text(`Invoice Number: ${invoiceData.invoiceNumber}`);
+  doc.text(`Date: ${invoiceData.date}`);
+  doc.text(`Due Date: ${invoiceData.dueDate}`);
+  doc.moveDown();
 
-// // SMS sending endpoint
-// app.post("/send-sms", async (req, res) => {
-//   try {
-//     const { to, message } = req.body;
+  // Sender & Recipient Details
+  doc.text(`From: ${invoiceData.sender.name}`);
+  doc.text(`Address: ${invoiceData.sender.address}`);
+  doc.text(`Email: ${invoiceData.sender.email}`);
+  doc.moveDown();
 
-//     if (!to || !message) {
-//       return res.status(400).json({ error: "Missing required fields" });
-//     }
+  doc.text(`To: ${invoiceData.recipient.name}`);
+  doc.text(`Address: ${invoiceData.recipient.address}`);
+  doc.text(`Email: ${invoiceData.recipient.email}`);
+  doc.moveDown();
 
-//     const response = await client.messages.create({
-//       to,
-//       from: twilioNumber,
-//       body: message,
-//     });
+  // Table Header with precise alignment
+  doc.moveDown();
+  doc.fontSize(12).text("Particulars", 50, 275);
+  //   doc.text("Quantity", 250, 275);
 
-//     res.status(200).json({ success: true, sid: response.sid });
-//   } catch (err) {
-//     res
-//       .status(500)
-//       .json({ error: "Internal Server Error", details: err.message });
-//   }
-// });
+  doc.text("Amount", 450, 275);
+  doc.moveDown();
 
-// // Define a POST API endpoint to trigger the message
-// app.post("/send-message", (req, res) => {
-//   // Destructure the required parameters from the request body
-//   const { to, contentSid, contentVariables, name } = req.body;
+  // Table Rows with aligned columns
+  let totalAmount = 0;
+  invoiceData.items.forEach((item) => {
+    const y = doc.y; // Capture the current y position for the row
 
-//   // Validate input
-//   if (!to || !contentSid || !contentVariables || !name) {
-//     return res
-//       .status(400)
-//       .send("Missing required fields (to, contentSid, contentVariables, name).");
-//   }
+    doc.text(item.name, 50, y); // Item name at column 1
+    // doc.text(item.quantity.toString(), 250, y); // Quantity at column 2
+    // doc.text(`$${item.price.toFixed(2)}`, 350, y); // Price at column 3
+    doc.text(`$${(item.quantity * item.price).toFixed(2)}`, 450, y); // Total at column 4
 
-//   // Craft a personalized message using the provided name
-//   const personalizedMessage = `Hello ${name}. Thank you for donating at SGSM.`;
+    totalAmount += item.quantity * item.price;
+    doc.moveDown(); // Move to the next row
+  });
 
-//   // Send the message using Twilio API
-//   client.messages
-//     .create({
-//       from: "whatsapp:+14155238886", // Twilio sandbox WhatsApp number
-//       to: `whatsapp:${to}`,           // Recipient's WhatsApp number (from JSON body)
-//       contentSid: contentSid,         // Content SID (from JSON body)
-//       body: personalizedMessage,      // Personalized message with the dynamic name
-//     })
-//     .then((message) => {
-//       res.status(200).send({ message: "Message sent successfully!", sid: message.sid });
-//     })
-//     .catch((error) => {
-//       res.status(500).send({ error: `Error sending message: ${error.message}` });
-//     });
-// });
+  // Total Amount Section
+  doc.moveDown();
+  doc
+    .fontSize(14)
+    .text(`Total Amount: $${totalAmount.toFixed(2)}`, { align: "right" });
 
-// // Start the server
-// app.listen(PORT, () => {
-//   console.log(`Server running on http://localhost:${PORT}`);
-// });
+  // Footer
+  doc.moveDown();
+  doc.fontSize(10).text("Thank you for your business!", { align: "center" });
+
+  // Finalize the PDF
+  doc.end();
+}
+
+// Example Invoice Data
+const invoiceData = {
+  invoiceNumber: "INV-12345",
+  date: "2025-02-05",
+  dueDate: "2025-02-20",
+  sender: {
+    name: "Your Company",
+    address: "123 Street, City",
+    email: "your@email.com",
+  },
+  recipient: {
+    name: "Client Name",
+    address: "456 Avenue, City",
+    email: "client@email.com",
+  },
+  items: [
+    { name: "Web Development", quantity: 1, price: 500.0 },
+    { name: "Hosting", quantity: 1, price: 800.0 },
+    { name: "Domain", quantity: 1, price: 20.0 },
+  ],
+};
+
+// Generate Invoice
+generateInvoice(invoiceData, "invoice.pdf");
+console.log("Invoice PDF generated successfully!");
