@@ -7,6 +7,7 @@ const axios = require("axios"); // Added for Brevo email API
 const app = express();
 const PORT = 5000;
 const PDFDocument = require("pdfkit");
+const path = require("path");
 const fs = require("fs");
 // Twilio Credentials
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -103,8 +104,8 @@ function generateInvoice(invoiceData, filePath) {
       .stroke();
 
     // Set Gujarati Font
-    doc.font("./NotoSansGujarati-VariableFont_wdth,wght.ttf");
-
+    const filePath = path.join(__dirname, "NotoSansGujarati-VariableFont_wdth,wght.ttf");
+    doc.font(filePath)
     // Top Header
     doc.fontSize(12);
     doc.text("|| શ્રી ગણેશાય નમઃ ||", 50, 20, { align: "left" });
@@ -117,14 +118,15 @@ function generateInvoice(invoiceData, filePath) {
     }
 
     // Centralized Header Text
+    const filePath2 = path.join(__dirname, "AnekGujarati_SemiCondensed-Bold.ttf");
     doc
-      .font("./AnekGujarati_SemiCondensed-Bold.ttf")
+      .font(filePath2)
       .fontSize(20)
       .text("શ્રી સૌરાષ્ટ્ર ગુર્જર સુતાર જ્ઞાતિ મંડળ, મુંબઈ.", 50, 160, {
         align: "center",
         bold: true,
       });
-    doc.font("./NotoSansGujarati-VariableFont_wdth,wght.ttf");
+    doc.font(filePath);
     doc
       .fontSize(10)
       .text("(મુંબઈ પરા અને પુના વિભાગ રજિસ્ટર નં. ૨૭૦૫ A સ્થાપના ૧૯૬૩)", {
