@@ -94,7 +94,7 @@ function generateInvoice(invoiceData, filePath) {
     .stroke();
 
   // Set Gujarati Font
-  doc.font("../NotoSansGujarati-VariableFont_wdth,wght.ttf");
+  doc.font("./NotoSansGujarati-VariableFont_wdth,wght.ttf");
 
   // Top Header
   doc.fontSize(12);
@@ -103,19 +103,19 @@ function generateInvoice(invoiceData, filePath) {
   doc.text("|| શ્રી વિશ્વકર્મણે નમઃ ||", 0, 20, { align: "right" });
 
   // Add Image (Make sure the file exists)
-  if (fs.existsSync("../logo.png")) {
-    doc.image("../logo.png", 200, 40, { width: 185, height: 120 });
+  if (fs.existsSync("./logo.png")) {
+    doc.image("./logo.png", 200, 40, { width: 185, height: 120 });
   }
 
   // Centralized Header Text
   doc
-    .font("../AnekGujarati_SemiCondensed-Bold.ttf")
+    .font("./AnekGujarati_SemiCondensed-Bold.ttf")
     .fontSize(20)
     .text("શ્રી સૌરાષ્ટ્ર ગુર્જર સુતાર જ્ઞાતિ મંડળ, મુંબઈ.", 50, 160, {
       align: "center",
       bold: true,
     });
-  doc.font("../NotoSansGujarati-VariableFont_wdth,wght.ttf");
+  doc.font("./NotoSansGujarati-VariableFont_wdth,wght.ttf");
   doc
     .fontSize(10)
     .text("(મુંબઈ પરા અને પુના વિભાગ રજિસ્ટર નં. ૨૭૦૫ A સ્થાપના ૧૯૬૩)", {
