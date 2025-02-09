@@ -310,8 +310,7 @@ function generateInvoice(invoiceData, filePath) {
         .text("કુલ રકમ", tableStartX + columnWidths[0] + 5, currentRowY + 7)
         .text(
           `₹${invoiceData.amounts
-            .reduce((acc, num) => acc + num, 0)
-            .toFixed(2)}`,
+            .reduce((acc, num) => acc + num, 0)}`,
           tableStartX + columnWidths[0] + columnWidths[1] + 5,
           currentRowY + 7
         );
