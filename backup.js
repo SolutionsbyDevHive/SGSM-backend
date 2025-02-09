@@ -1,5 +1,102 @@
+const PDFDocument = require("pdfkit");
+const fs = require("fs");
+
+function generateInvoice(invoiceData, filePath) {
+  const doc = new PDFDocument({ size: "A4", margin: 50 });
+  const stream = fs.createWriteStream(filePath);
+  doc.pipe(stream);
+
+  // Set Gujarati font
+  doc.font("./NotoSansGujarati-VariableFont_wdth,wght.ttf");
+
+  // Top Header - Align phrases properly
+  doc.fontSize(12);
+  doc.text("|| શ્રી ગણેશાય નમઃ ||", 50, 20, { align: "left" });
+  doc.text("|| શ્રી 1||", 0, 20, { align: "center" });
+  doc.text("|| શ્રી વિષ્ણવે નમઃ ||", 0, 20, { align: "right" });
+  doc.image('./logo.png', 20, 40, { width: 200, height: 120 });
+
+  doc.moveDown(2);
+  doc.fontSize(16).text("શ્રી સૌરાષ્ટ્ર ગુર્જર સુતાર જ્ઞાતિ મંડળ, મુંબઈ.", { align: "right", bold: true });
+  doc.moveDown(0.5);
+  doc.fontSize(10).text("(મુંબઈ પરા અને પુના વિભાગ રજિસ્ટર નં. ૨૭૦૫ A સ્થાપના ૧૯૬૩)", { align: "right" });
+  doc.moveDown(0.3);
+  doc.text("સી. ડી. હાઈટ, બિલ્ડિંગ નં. ૩, બી વિંગ, ૧૧૮ પેલા માળે, લક્ષ્મીનારાયણ મંદિર ની સામે,", { align: "right" });
+  doc.text("રાણી સતી માર્ગ, મલાડ (પૂર્વ), મુંબઈ - ૪૦૦૦૯૭.", { align: "right" });
+  doc.moveDown(1);
+
+  // Invoice Number and Date Section
+  doc.fontSize(12);
+  const leftColumnX = 50;
+  const rightColumnX = 350;
+  const rowHeight = 20;
+  let currentY = 170;
+
+  doc.text("ક્રમાંક:", leftColumnX, currentY).text(invoiceData.invoiceNumber || "________", leftColumnX + 70, currentY);
+  doc.text("તારીખ:", rightColumnX, currentY).text(invoiceData.date || "________", rightColumnX + 50, currentY);
+  currentY += rowHeight;
+  doc.text("શ્રી:", leftColumnX, currentY).text(invoiceData.recipientName || "____________________________", leftColumnX + 70, currentY);
+  doc.text("ગામ:", rightColumnX, currentY).text(invoiceData.village || "____________________________", rightColumnX + 50, currentY);
+
+  // Descriptions Section
+  currentY += rowHeight + 10;
+  doc.text("તમારા તરફથી શું:", leftColumnX, currentY);
+  doc.text("આપનો લખાયેલો હિસાબ અહીં છે:", rightColumnX, currentY);
+
+  // Table Header
+  const tableTop = currentY + 30;
+  const columnPositions = [50, 300, 350, 450];
+
+  doc.fontSize(12)
+    .text("વિગત", columnPositions[0], tableTop, { underline: true })
+    .text("કુલ રકમ", columnPositions[3], tableTop, { align: "center", underline: true });
+
+  // Table Rows
+  currentY = tableTop + 20;
+  invoiceData.items.forEach((item, index) => {
+    const y = currentY;
+
+    // Draw row text
+    doc.text(`${index + 1}) ${item.name}`, columnPositions[0], y);
+    doc.text(`₹${item.price.toFixed(2)}`, columnPositions[3], y, { align: "right" });
+
+    currentY += rowHeight;
+  });
+
+  // Footer Section
+  currentY += 30;
+  doc.text("શ્રી વાલાપર માસ: _______________ થી ______________", leftColumnX, currentY);
+  currentY += rowHeight;
+  doc.text("શ્રી સૌરાષ્ટ્ર ગુર્જર સુતાર પ્રાપ્તિ મંડળ, મુંબઈ.", { align: "center", bold: true });
+
+  // Finalize the PDF
+  doc.end();
+}
+
+// Example Invoice Data
+const invoiceData = {
+  invoiceNumber: "1117",
+  date: "________",
+  recipientName: "શ્રી જયન્તીલાલ",
+  village: "રાજકોટ",
+  items: [
+    { name: "સંસ્થાના ઉછેર અને મફતીફંડ", quantity: 1, price: 500 },
+    { name: "શ્રી કપલેટી ફંડ", quantity: 1, price: 300 },
+    { name: "દશમો (જાતે)", quantity: 1, price: 200 },
+    { name: "શ્રી ગોલક ફંડ", quantity: 1, price: 400 },
+  ],
+};
+
+// Generate Invoice
+generateInvoice(invoiceData, "receipt.pdf");
+console.log("Gujarati Invoice PDF generated successfully!");
+
+
+
+// index.js backup
+
 require("dotenv").config();
-const { v4: uuidv4 } = require("uuid");
+
 const express = require("express");
 const cors = require("cors");
 const twilio = require("twilio");
@@ -18,21 +115,11 @@ const client = twilio(accountSid, authToken);
 app.use(cors());
 app.use(express.json()); // Parse JSON body
 
-function generateRandom4DigitNumber() {
-  // Generate a UUID and extract numeric characters only
-  const uuidNumeric = uuidv4().replace(/\D/g, ""); // Remove all non-numeric characters
-
-  // Take the first 4 digits of the numeric-only UUID
-  const random4DigitNumber = uuidNumeric.slice(0, 4);
-
-  return random4DigitNumber;
-}
-
 // SMS sending endpoint
 app.post("/send-sms", async (req, res) => {
   try {
     const { to, name, amount } = req.body;
-    const personalizedMessage = `Thank You ${name}! Your donation of Rs.${amount} has been successfully received. -SHRI SAURASHTRA GURJAR SUTAR GNATI MANDAL MUMBAI`;
+    const personalizedMessage = `Thank You ${name}! Your donation of Rs.${amount} has been successfully received. -SHRI SAURASHTRA GURJAR SUTAR GNATI MANDAL`;
 
     const response = await client.messages.create({
       to,
@@ -149,15 +236,99 @@ function generateInvoice(invoiceData, filePath) {
   doc.text(invoiceData.email || "", leftColumnX + 30, currentY + 35);
   doc
     .text("ગામ:", rightColumnX, currentY + 35)
-    .text(invoiceData.native || "", rightColumnX + 50, currentY + 35);
+    .text(invoiceData.village || "", rightColumnX + 50, currentY + 35);
+
+  // Description Section
+  currentY += rowHeight + 10;
+  // doc.text("તમારા તરફથી શું:", leftColumnX, currentY);
+  // doc.text("વિગત", leftColumnX, currentY + 40, { underline: true });
+  // doc.text("કુલ રકમ", rightColumnX + 100, currentY + 40, {
+  // align: "right",
+  // underline: true,
+  // });
+
+  // // Table Rows
+  // currentY += 60;
+  // if (Array.isArray(invoiceData.items)) {
+  //   // Define table column positions
+  //   const tableStartX = leftColumnX; // Starting X position for the table
+  //   const tableStartY = currentY; // Starting Y position for the table
+  //   const columnWidths = [50, 325, 125]; // Widths for each column: Sr. No, Item Name, Price
+  //   const rowHeight = 25; // Height of each row
+
+  //   // Set stroke color to black for the table
+  //   doc.strokeColor("black").lineWidth(2);
+
+  //   // Draw table header
+  //   doc
+  //     .rect(
+  //       tableStartX,
+  //       tableStartY,
+  //       columnWidths.reduce((a, b) => a + b),
+  //       rowHeight
+  //     )
+  //     .stroke(); // Header row border
+  //   doc
+  //     .text("ક્રમ", tableStartX + 5, tableStartY + 7)
+  //     .text("વિગત", tableStartX + columnWidths[0] + 5, tableStartY + 7)
+  //     .text(
+  //       "કુલ રકમ",
+  //       tableStartX + columnWidths[0] + columnWidths[1] + 5,
+  //       tableStartY + 7
+  //     );
+
+  //   // Draw table rows for items
+  //   let currentRowY = tableStartY + rowHeight; // First row Y position
+  //   Object.entries(invoiceData.amounts).forEach(([key, value], index) => {
+  //     const amount = Number(value) || 0; // Convert string to number
     
-    // Description Section
-    currentY += rowHeight;
-    doc
-      .text("Payment Mode:", rightColumnX, currentY + 40)
-      .text(invoiceData.paymentMode || "", rightColumnX + 100, currentY + 40);
+  //     // Draw row border
+  //     doc
+  //       .rect(
+  //         tableStartX,
+  //         currentRowY,
+  //         columnWidths.reduce((a, b) => a + b),
+  //         rowHeight
+  //       )
+  //       .stroke();
     
-    currentY += rowHeight + 10;
+  //     // Add text for each column
+  //     doc
+  //       .text(`${index + 1}`, tableStartX + 5, currentRowY + 7) // Serial Number
+  //       .text(key, tableStartX + columnWidths[0] + 5, currentRowY + 7) // Item Name
+  //       .text(
+  //         `₹${amount.toFixed(2)}`,
+  //         tableStartX + columnWidths[0] + columnWidths[1] + 5,
+  //         currentRowY + 7
+  //       ); // Price
+    
+  //     currentRowY += rowHeight; // Move to the next row
+  //   });
+    
+    
+
+  //   // Draw total amount row
+  //   doc
+  //     .rect(
+  //       tableStartX,
+  //       currentRowY,
+  //       columnWidths.reduce((a, b) => a + b),
+  //       rowHeight
+  //     )
+  //     .stroke();
+  //   doc
+  //     .fontSize(12)
+  //     .text("કુલ રકમ", tableStartX + columnWidths[0] + 5, currentRowY + 7)
+  //     .text(
+  //       `₹${invoiceData.amounts.reduce((sum, i) => sum + i.price, 0).toFixed(2)}`,
+  //       tableStartX + columnWidths[0] + columnWidths[1] + 5,
+  //       currentRowY + 7
+  //     );
+
+  //   // Update currentY to the end of the table
+  //   currentY = currentRowY + rowHeight;
+  // }
+
   // Table Rows
 currentY += 60;
 if (invoiceData.amounts && typeof invoiceData.amounts === "object") {
@@ -248,25 +419,20 @@ if (invoiceData.amounts && typeof invoiceData.amounts === "object") {
   // Footer Section
   currentY += 50;
   currentY += rowHeight;
-  doc.text("શ્રી સૌરાષ્ટ્ર ગુર્જર સુતાર પ્રાપ્તિ મંડળ, મુંબઈ.", 0, 580, {
+  doc.text("શ્રી સૌરાષ્ટ્ર ગુર્જર સુતાર પ્રાપ્તિ મંડળ, મુંબઈ.", 0, 530, {
     align: "right",
     bold: true,
   });
 
   // Finalize the PDF
   doc.end();
-  return new Promise((resolve, reject) => {
-    stream.on("finish", resolve);
-    stream.on("error", reject);
-  });
 }
 // Email sending endpoint using Brevo
 app.post("/send-email", async (req, res) => {
   try {
     const { to, donaterData } = req.body;
     console.log(donaterData);
-    
-    await generateInvoice(donaterData, "receipt.pdf");
+    generateInvoice(donaterData, "receipt.pdf");
     if (!to) {
       return res.status(400).json({ error: "Missing required fields" });
     }
