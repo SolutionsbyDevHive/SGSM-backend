@@ -154,12 +154,12 @@ function generateInvoice(invoiceData, filePath) {
     const rowHeight = 20;
     let currentY = 220;
 
+    // doc
+    //   .text("ક્રમાંક:", rightColumnX, currentY + 35)
+    //   .text(invoiceData.invoiceNumber, rightColumnX + 50, currentY + 35);
     doc
-      .text("ક્રમાંક:", rightColumnX, currentY + 35)
-      .text(invoiceData.invoiceNumber, rightColumnX + 50, currentY + 35);
-    doc
-      .text("તારીખ:", rightColumnX, currentY + 15)
-      .text(invoiceData.date || "", rightColumnX + 50, currentY + 15);
+      .text("તારીખ:", rightColumnX, currentY + 25)
+      .text(invoiceData.date || "", rightColumnX + 50, currentY + 25);
     currentY += rowHeight;
     doc
       .text("શ્રી:", leftColumnX, currentY)
