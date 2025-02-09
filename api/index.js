@@ -104,8 +104,11 @@ function generateInvoice(invoiceData, filePath) {
       .stroke();
 
     // Set Gujarati Font
-    const filePath = path.join(__dirname, "NotoSansGujarati-VariableFont_wdth,wght.ttf");
-    doc.font(filePath)
+    const filePath = path.join(
+      __dirname,
+      "NotoSansGujarati-VariableFont_wdth,wght.ttf"
+    );
+    doc.font(filePath);
     // Top Header
     doc.fontSize(12);
     doc.text("|| શ્રી ગણેશાય નમઃ ||", 50, 20, { align: "left" });
@@ -113,12 +116,15 @@ function generateInvoice(invoiceData, filePath) {
     doc.text("|| શ્રી વિશ્વકર્મણે નમઃ ||", 0, 20, { align: "right" });
 
     // Add Image (Make sure the file exists)
-    if (fs.existsSync("./logo.png")) {
-      doc.image("./logo.png", 200, 40, { width: 185, height: 120 });
+    if (fs.existsSync(__dirname + "/logo.png")) {
+      doc.image(__dirname + "/logo.png", 200, 40, { width: 185, height: 120 });
     }
 
     // Centralized Header Text
-    const filePath2 = path.join(__dirname, "AnekGujarati_SemiCondensed-Bold.ttf");
+    const filePath2 = path.join(
+      __dirname,
+      "AnekGujarati_SemiCondensed-Bold.ttf"
+    );
     doc
       .font(filePath2)
       .fontSize(20)
@@ -261,7 +267,7 @@ function generateInvoice(invoiceData, filePath) {
       } else if (invoiceData.part == "Kandivali") {
         Object.entries(invoiceData.amounts).forEach(([value], index) => {
           const amount = Number(value) || 0; // Convert string to number
-          totalAmount =  invoiceData.amounts.reduce((acc, num) => acc + num, 0); // Add to total sum
+          totalAmount = invoiceData.amounts.reduce((acc, num) => acc + num, 0); // Add to total sum
           // Draw row border
           doc
             .rect(
@@ -303,7 +309,9 @@ function generateInvoice(invoiceData, filePath) {
         .fontSize(12)
         .text("કુલ રકમ", tableStartX + columnWidths[0] + 5, currentRowY + 7)
         .text(
-          `₹${invoiceData.amounts.reduce((acc, num) => acc + num, 0).toFixed(2)}`,
+          `₹${invoiceData.amounts
+            .reduce((acc, num) => acc + num, 0)
+            .toFixed(2)}`,
           tableStartX + columnWidths[0] + columnWidths[1] + 5,
           currentRowY + 7
         );
