@@ -179,7 +179,14 @@ function generateInvoice(invoiceData, filePath) {
     currentY += rowHeight + 10;
     // Table Rows
     currentY += 60;
-    if (invoiceData.amounts && typeof invoiceData.amounts === "object") {
+    // Ensure amounts is an array
+    const amountsArray = Array.isArray(invoiceData.amounts) 
+      ? invoiceData.amounts 
+      : invoiceData.amounts && typeof invoiceData.amounts === "object" 
+        ? Object.values(invoiceData.amounts) 
+        : [];
+    
+    if (amountsArray && amountsArray.length > 0) {
       // Define table column positions
       const tableStartX = leftColumnX; // Starting X position for the table
       const tableStartY = currentY; // Starting Y position for the table
@@ -234,9 +241,9 @@ function generateInvoice(invoiceData, filePath) {
         ],
       };
       if (invoiceData.part == "Malad(East)") {
-        Object.entries(invoiceData.amounts).forEach(([value], index) => {
-          const amount = Number(value) || 0; // Convert string to number
-          totalAmount += amount; // Add to total sum
+        amountsArray.forEach((amount, index) => {
+          const numAmount = Number(amount) || 0; // Convert string to number
+          totalAmount += numAmount; // Add to total sum
 
           // Draw row border
           doc
@@ -257,7 +264,7 @@ function generateInvoice(invoiceData, filePath) {
               currentRowY + 7
             ) // Item Name
             .text(
-              `₹${invoiceData.amounts[index].toFixed(2)}`,
+              `₹${numAmount.toFixed(2)}`,
               tableStartX + columnWidths[0] + columnWidths[1] + 5,
               currentRowY + 7
             ); // Price
@@ -265,9 +272,9 @@ function generateInvoice(invoiceData, filePath) {
           currentRowY += rowHeight; // Move to the next row
         });
       } else if (invoiceData.part == "Kandivali") {
-        Object.entries(invoiceData.amounts).forEach(([value], index) => {
-          const amount = Number(value) || 0; // Convert string to number
-          totalAmount = invoiceData.amounts.reduce((acc, num) => acc + num, 0); // Add to total sum
+        amountsArray.forEach((amount, index) => {
+          const numAmount = Number(amount) || 0; // Convert string to number
+          totalAmount += numAmount; // Add to total sum
           // Draw row border
           doc
             .rect(
@@ -287,7 +294,7 @@ function generateInvoice(invoiceData, filePath) {
               currentRowY + 7
             ) // Item Name
             .text(
-              `₹${invoiceData.amounts[index].toFixed(2)}`,
+              `₹${numAmount.toFixed(2)}`,
               tableStartX + columnWidths[0] + columnWidths[1] + 5,
               currentRowY + 7
             ); // Price
@@ -309,8 +316,8 @@ function generateInvoice(invoiceData, filePath) {
         .fontSize(12)
         .text("કુલ રકમ", tableStartX + columnWidths[0] + 5, currentRowY + 7)
         .text(
-          `₹${invoiceData.amounts
-            .reduce((acc, num) => acc + num, 0)}`,
+          `₹${amountsArray
+            .reduce((acc, num) => acc + (Number(num) || 0), 0).toFixed(2)}`,
           tableStartX + columnWidths[0] + columnWidths[1] + 5,
           currentRowY + 7
         );
