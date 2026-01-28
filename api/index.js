@@ -29,50 +29,50 @@ function generateRandom4DigitNumber() {
   return random4DigitNumber;
 }
 
-// SMS sending endpoint
-app.post("/send-sms", async (req, res) => {
-  try {
-    const { to, name, amount } = req.body;
-    const personalizedMessage = `Thank You ${name}! Your donation of Rs.${amount} has been successfully received. -SHRI SAURASHTRA GURJAR SUTAR GNATI MANDAL MUMBAI`;
+// // SMS sending endpoint
+// app.post("/send-sms", async (req, res) => {
+//   try {
+//     const { to, name, amount } = req.body;
+//     const personalizedMessage = `Thank You ${name}! Your donation of Rs.${amount} has been successfully received. -SHRI SAURASHTRA GURJAR SUTAR GNATI MANDAL MUMBAI`;
 
-    const response = await client.messages.create({
-      to,
-      from: twilioNumber,
-      body: personalizedMessage,
-    });
+//     const response = await client.messages.create({
+//       to,
+//       from: twilioNumber,
+//       body: personalizedMessage,
+//     });
 
-    res.status(200).json({ success: true, sid: response.sid });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ error: "Internal Server Error", details: err.message });
-  }
-});
+//     res.status(200).json({ success: true, sid: response.sid });
+//   } catch (err) {
+//     res
+//       .status(500)
+//       .json({ error: "Internal Server Error", details: err.message });
+//   }
+// });
 
-// Define a POST API endpoint to trigger the message
-app.post("/send-message", (req, res) => {
-  const { to, name, amount } = req.body;
-  const personalizedMessage = `Hello ${name} Your donation of Rs.${amount} has been successfully received. Thank You!`;
+// // Define a POST API endpoint to trigger the message
+// app.post("/send-message", (req, res) => {
+//   const { to, name, amount } = req.body;
+//   const personalizedMessage = `Hello ${name} Your donation of Rs.${amount} has been successfully received. Thank You!`;
 
-  // Send the message using Twilio API
-  client.messages
-    .create({
-      from: "whatsapp:+18312082811", // Twilio sandbox WhatsApp number
-      to: `whatsapp:+918879693624`, // Recipient's WhatsApp number (from JSON body)
-      body: personalizedMessage, // Message to send (personalized)
-      messagingServiceSid: "MG603308888211fb79ef5be5faac19128c",
-    })
-    .then((message) => {
-      res
-        .status(200)
-        .send({ message: "Message sent successfully!", sid: message.sid });
-    })
-    .catch((error) => {
-      res
-        .status(500)
-        .send({ error: `Error sending message: ${error.message}` });
-    });
-});
+//   // Send the message using Twilio API
+//   client.messages
+//     .create({
+//       from: "whatsapp:+18312082811", // Twilio sandbox WhatsApp number
+//       to: `whatsapp:+918879693624`, // Recipient's WhatsApp number (from JSON body)
+//       body: personalizedMessage, // Message to send (personalized)
+//       messagingServiceSid: "MG603308888211fb79ef5be5faac19128c",
+//     })
+//     .then((message) => {
+//       res
+//         .status(200)
+//         .send({ message: "Message sent successfully!", sid: message.sid });
+//     })
+//     .catch((error) => {
+//       res
+//         .status(500)
+//         .send({ error: `Error sending message: ${error.message}` });
+//     });
+// });
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
